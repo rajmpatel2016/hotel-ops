@@ -1,0 +1,92 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; %>
+<div class="head"><h1>Staff</h1><span class="muted"><%= activeCount %> active</span></div>
+<% if (unmatched.length) { %>
+<div class="flash warn"><strong><%= unmatched.length %> added by hand and still not on a payroll report after <%= UNMATCHED_DAYS %> days:</strong> <%= unmatched.map(e => e.name).join(', ') %>. Check that they are set up in ADP, or remove them if they no longer work here.</div>
+<% } %>
+<div class="cols">
+  <form method="post" action="<%= base %>/staff" class="card stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <h2>Add someone by hand</h2>
+    <p class="muted small">For a new hire not in payroll yet, a temp, or someone borrowed from another hotel.</p>
+    <div class="row tight">
+      <label class="grow">Name<input name="name" maxlength="120" required></label>
+      <label>Category<select name="category"><% categories.forEach(c => { %><option><%= c %></option><% }) %></select></label>
+    </div>
+    <div class="row tight">
+      <label class="grow">Job title (optional)<input name="job_title" maxlength="120"></label>
+      <label class="grow">Note (optional)<input name="note" maxlength="300" placeholder="Agency temp, starts Monday"></label>
+    </div>
+    <button class="btn" type="submit">Add to staff list</button>
+  </form>
+  <% if (can('staffImport')) { %>
+  <form method="post" action="<%= base %>/staff-import" enctype="multipart/form-data" class="card stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <h2>Load the ADP roster report</h2>
+    <p class="muted small">Export the employee roster from ADP as a CSV file with name, department and job title. Pay and Social Security columns are ignored and never stored. People you removed or moved by hand stay as you set them.</p>
+    <label>Roster file (CSV)<input type="file" name="roster" accept=".csv,text/csv" required></label>
+    <button class="btn" type="submit">Load report</button>
+    <% if (imports.length) { %>
+    <p class="muted small">Last loaded <%= util.shortDateTime(imports[0].imported_at, property.timezone) %><% if (imports[0].by_name) { %> by <%= imports[0].by_name %><% } %>: <%= imports[0].rows_read %> employees read, <%= imports[0].added %> added, <%= imports[0].updated %> updated, <%= imports[0].dropped %> dropped off.</p>
+    <% } %>
+  </form>
+  <% } %>
+</div>
+
+<% if (!groups.length) { %><section class="card"><p class="muted">No staff yet. Load the ADP roster report or add people by hand.</p></section><% } %>
+<% groups.forEach(g => { %>
+<h2><%= g.category %> <span class="count"><%= g.people.length %></span></h2>
+<div class="tablewrap card flush">
+<table class="grid compact">
+  <thead><tr><th>Name</th><th>Job title</th><th>Source</th><th>Category</th><th></th></tr></thead>
+  <tbody>
+  <% g.people.forEach(e => { %>
+    <tr>
+      <td><strong><%= e.name %></strong><% if (e.note) { %><br><span class="muted small"><%= e.note %></span><% } %></td>
+      <td class="muted"><%= e.job_title || e.department %></td>
+      <td><% if (e.source === 'adp') { %><span class="pill">ADP</span><% } else { %><span class="pill <%= e.flagUnmatched ? 'warn' : 'info' %>">Added by hand</span><% if (e.flagUnmatched) { %> <span class="muted small"><%= e.unmatchedDays %> days, not in payroll</span><% } %><% } %></td>
+      <td>
+        <form method="post" action="<%= base %>/staff/<%= e.id %>" class="inline row tight">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="category">
+          <select name="category" data-autosubmit aria-label="Category for <%= e.name %>"><% categories.forEach(c => { %><option <%= c === e.category ? 'selected' : '' %>><%= c %></option><% }) %></select>
+          <noscript><button class="btn small" type="submit">Move</button></noscript>
+        </form>
+      </td>
+      <td class="r">
+        <form method="post" action="<%= base %>/staff/<%= e.id %>" class="inline" data-confirm="Remove <%= e.name %> from the staff list? Their history is kept.">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="remove">
+          <button class="btn small danger" type="submit">Remove</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% }) %>
+
+<% if (dropped.length) { %>
+<h2>No longer on the payroll report <span class="count"><%= dropped.length %></span></h2>
+<p class="muted small">These people were on an earlier report but not the latest one, so they are off the assignment lists. Remove them to clear this list.</p>
+<div class="tablewrap card flush">
+<table class="grid compact"><tbody>
+  <% dropped.forEach(e => { %>
+    <tr class="off"><td><%= e.name %></td><td class="muted"><%= e.job_title || e.department %></td><td class="muted"><%= e.category %></td>
+      <td class="r"><form method="post" action="<%= base %>/staff/<%= e.id %>" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="remove"><button class="btn small" type="submit">Remove</button></form></td></tr>
+  <% }) %>
+</tbody></table>
+</div>
+<% } %>
+
+<% if (removed.length) { %>
+<details class="card">
+  <summary>Removed <span class="count"><%= removed.length %></span></summary>
+  <table class="grid compact"><tbody>
+  <% removed.forEach(e => { %>
+    <tr class="off"><td><%= e.name %></td><td class="muted"><%= e.job_title || e.department %></td><td class="muted"><%= e.category %> · removed <%= util.shortDateTime(e.removed_at, property.timezone) %></td>
+      <td class="r"><form method="post" action="<%= base %>/staff/<%= e.id %>" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="restore"><button class="btn small" type="submit">Restore</button></form></td></tr>
+  <% }) %>
+  </tbody></table>
+</details>
+<% } %>
+<%- include('partials/bottom') %>

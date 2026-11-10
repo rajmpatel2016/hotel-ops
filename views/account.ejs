@@ -1,0 +1,13 @@
+<%- include('partials/top') %>
+<h1>Your account</h1>
+<section class="card narrow left">
+  <p><strong><%= user.name %></strong><br><span class="muted"><%= user.email %> · <%= roleLabels[user.role] %><% if (user.property_name) { %> · <%= user.property_name %><% } %></span></p>
+  <h2>Change password</h2>
+  <form method="post" action="/account/password" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Current password<input type="password" name="current" autocomplete="current-password" required></label>
+    <label>New password (10 characters or more)<input type="password" name="next" autocomplete="new-password" minlength="10" required></label>
+    <button class="btn primary" type="submit">Change password</button>
+  </form>
+</section>
+<%- include('partials/bottom') %>

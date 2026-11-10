@@ -1,0 +1,49 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; const label = { all: 'Checkouts and stayovers', checkout: 'Checkouts only', stayover: 'Stayovers only' }; %>
+<div class="head no-print">
+  <h1>Room sheets</h1>
+  <form method="get" action="<%= base %>/sheets" class="row tight">
+    <input type="date" name="day" value="<%= day %>" data-autosubmit aria-label="Sheet date">
+    <input type="hidden" name="show" value="<%= show %>">
+  </form>
+  <div class="segnav">
+    <% Object.keys(label).forEach(k => { %><a class="<%= show === k ? 'on' : '' %>" href="<%= base %>/sheets?day=<%= day %>&show=<%= k %>"><%= label[k] %></a><% }) %>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn" href="<%= base %>/board?day=<%= day %>">Back to board</a>
+  <button class="btn primary" type="button" data-print <%= sheets.length ? '' : 'disabled' %>>Print</button>
+</div>
+<% if (unassigned.length) { %>
+<div class="flash warn no-print"><strong><%= unassigned.length %> rooms have no housekeeper</strong> and will not print on anyone's sheet: <%= unassigned.map(r => r.number).join(', ') %>. <a href="<%= base %>/board?day=<%= day %>">Assign them on the board.</a></div>
+<% } %>
+<% if (!sheets.length) { %>
+<section class="card no-print"><p>No assigned rooms for <%= util.longDate(day) %><%= show !== 'all' ? ' in this view' : '' %>. Set statuses and housekeepers on the <a href="<%= base %>/board?day=<%= day %>">board</a> first.</p></section>
+<% } %>
+<% sheets.forEach(sh => { const co = sh.rooms.filter(r => r.status === 'checkout'); const so = sh.rooms.filter(r => r.status === 'stayover'); %>
+<section class="sheet">
+  <header>
+    <div>
+      <div class="sheetname"><%= sh.name %></div>
+      <div class="sheetmeta"><%= property.name %> · <%= util.longDate(day) %></div>
+    </div>
+    <div class="sheetcount">
+      <% if (show !== 'stayover') { %><span><strong><%= co.length %></strong> <%= co.length === 1 ? 'checkout' : 'checkouts' %></span><% } %>
+      <% if (show !== 'checkout') { %><span><strong><%= so.length %></strong> <%= so.length === 1 ? 'stayover' : 'stayovers' %></span><% } %>
+      <span><strong><%= sh.rooms.length %></strong> <%= sh.rooms.length === 1 ? 'room' : 'rooms' %></span>
+    </div>
+  </header>
+  <% [['Checkouts', co], ['Stayovers', so]].forEach(([heading, list]) => { if (!list.length) return; %>
+  <h2><%= heading %></h2>
+  <table class="sheettable">
+    <thead><tr><th class="c-room">Room</th><th class="c-type">Type</th><th>Notes</th><th class="c-time">Start</th><th class="c-time">Finish</th><th class="c-done">Done</th></tr></thead>
+    <tbody>
+    <% list.forEach(r => { %>
+      <tr><td class="c-room"><%= r.number %></td><td class="c-type"><%= r.room_type %></td><td><%= r.note %></td><td class="c-time"></td><td class="c-time"></td><td class="c-done"><span class="box"></span></td></tr>
+    <% }) %>
+    </tbody>
+  </table>
+  <% }) %>
+  <footer>Report anything broken to the front desk or your manager: room number and what is wrong.</footer>
+</section>
+<% }) %>
+<%- include('partials/bottom') %>

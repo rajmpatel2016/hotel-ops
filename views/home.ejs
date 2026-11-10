@@ -1,0 +1,25 @@
+<%- include('partials/top') %>
+<h1>All hotels</h1>
+<% if (!rows.length) { %>
+<section class="card"><p>No hotels yet. <a href="/admin">Add the first hotel</a>.</p></section>
+<% } else { %>
+<div class="tablewrap card flush">
+<table class="grid">
+  <thead><tr><th>Hotel</th><th class="n">Rooms</th><th class="n">Checkouts today</th><th class="n">Stayovers today</th><th class="n">Unassigned</th><th class="n">Open maintenance</th><th class="n">Needs GM</th></tr></thead>
+  <tbody>
+  <% rows.forEach(r => { %>
+    <tr>
+      <td><a href="/p/<%= r.id %>"><strong><%= r.name %></strong></a></td>
+      <td class="n"><%= r.rooms %></td>
+      <td class="n"><%= r.checkouts %></td>
+      <td class="n"><%= r.stayovers %></td>
+      <td class="n"><% if (r.unassigned) { %><span class="pill warn"><%= r.unassigned %></span><% } else { %>0<% } %></td>
+      <td class="n"><%= r.open_maint %></td>
+      <td class="n"><% if (r.flagged) { %><a class="pill bad" href="/p/<%= r.id %>/gm"><%= r.flagged %></a><% } else { %>0<% } %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+<%- include('partials/bottom') %>

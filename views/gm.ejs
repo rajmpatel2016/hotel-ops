@@ -1,0 +1,52 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; %>
+<div class="head"><h1>Needs GM</h1><span class="muted">Requests maintenance could not fix</span></div>
+<% if (!waiting.length) { %><section class="card"><p class="muted">Nothing is waiting on a decision.</p></section><% } %>
+<% waiting.forEach(m => { %>
+<section class="card gmcard">
+  <div class="head tightHead">
+    <h2><a href="<%= base %>/maintenance/<%= m.id %>">#<%= m.id %></a> · <%= m.room ? 'Room ' + m.room : m.location %></h2>
+    <% if (m.priority === 'urgent') { %><span class="pill bad">Urgent</span><% } %>
+    <% if (m.room_out_of_order) { %><span class="pill st-ooo">Room out of order</span><% } %>
+    <span class="spacer"></span>
+    <span class="muted small">Flagged <%= util.shortDateTime(m.flagged_at, property.timezone) %> · <%= util.daysSince(m.flagged_at) %> days waiting</span>
+  </div>
+  <p><%= m.description %></p>
+  <p><strong>Why it could not be fixed:</strong> <%= m.flag_reason %></p>
+  <form method="post" action="<%= base %>/gm/<%= m.id %>" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Your decision<textarea name="note" rows="2" maxlength="2000" placeholder="Calling the HVAC contractor today. Keep the room out of order until Thursday."></textarea></label>
+    <div class="row tight">
+      <button class="btn primary" name="decision" value="vendor" type="submit">Outside vendor needed</button>
+      <button class="btn" name="decision" value="reopen" type="submit">Send back to maintenance</button>
+      <button class="btn" name="decision" value="close" type="submit">Close without repair</button>
+    </div>
+  </form>
+</section>
+<% }) %>
+<% if (vendor.length) { %>
+<h2>Waiting on an outside vendor</h2>
+<div class="tablewrap card flush">
+<table class="grid">
+  <thead><tr><th>#</th><th>Where</th><th>Problem</th><th>Decision</th><th>Decided</th><th></th></tr></thead>
+  <tbody>
+  <% vendor.forEach(m => { %>
+    <tr>
+      <td><a href="<%= base %>/maintenance/<%= m.id %>">#<%= m.id %></a></td>
+      <td class="nowrap"><%= m.room ? 'Room ' + m.room : m.location %></td>
+      <td><%= m.description.length > 90 ? m.description.slice(0, 90) + '…' : m.description %></td>
+      <td><%= m.gm_decision %></td>
+      <td class="muted nowrap"><%= util.shortDateTime(m.gm_decided_at, property.timezone) %></td>
+      <td class="r">
+        <form method="post" action="<%= base %>/gm/<%= m.id %>" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="decision" value="fixed">
+          <button class="btn small" type="submit">Repair done</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+<%- include('partials/bottom') %>

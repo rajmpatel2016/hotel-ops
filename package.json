@@ -1,0 +1,26 @@
+{
+  "name": "hotel-ops",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hotel operations: housekeeping board, room sheets, maintenance log, staff roster",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-session": "^2.1.1",
+    "csv-parse": "^7.0.3",
+    "ejs": "^7.0.2",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.4",
+    "helmet": "^8.3.0",
+    "multer": "^2.5.0",
+    "pg": "^8.23.1"
+  }
+}

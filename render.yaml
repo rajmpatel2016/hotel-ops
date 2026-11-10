@@ -1,0 +1,33 @@
+# Render Blueprint: one web service and one Postgres database.
+# In Render: New > Blueprint > pick this repository. You will be asked for
+# ADMIN_EMAIL and ADMIN_PASSWORD once; they create the first admin sign-in.
+services:
+  - type: web
+    name: hotel-ops
+    runtime: node
+    plan: 0.5c-512mb
+    region: virginia
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hotel-ops-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: hotel-ops-db
+    plan: 0.1c-256mb
+    region: virginia

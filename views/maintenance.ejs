@@ -1,0 +1,33 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; %>
+<div class="head">
+  <h1>Maintenance</h1>
+  <div class="segnav">
+    <% Object.keys(views).forEach(k => { %><a class="<%= show === k ? 'on' : '' %>" href="<%= base %>/maintenance?show=<%= k %>"><%= views[k].label %> <span class="count"><%= counts[k] %></span></a><% }) %>
+  </div>
+  <span class="spacer"></span>
+  <a class="btn primary" href="<%= base %>/maintenance/new">Log a request</a>
+</div>
+<% if (!requests.length) { %>
+<section class="card"><p class="muted">Nothing here.</p></section>
+<% } else { %>
+<div class="tablewrap card flush">
+<table class="grid">
+  <thead><tr><th>#</th><th>Where</th><th>Problem</th><th>Status</th><th>Logged</th><th>By</th></tr></thead>
+  <tbody>
+  <% requests.forEach(m => { %>
+    <tr>
+      <td><a href="<%= base %>/maintenance/<%= m.id %>">#<%= m.id %></a></td>
+      <td class="nowrap"><%= m.room ? 'Room ' + m.room : m.location %><% if (m.room && m.location) { %><br><span class="muted small"><%= m.location %></span><% } %></td>
+      <td><a class="plain" href="<%= base %>/maintenance/<%= m.id %>"><%= m.description.length > 110 ? m.description.slice(0, 110) + '…' : m.description %></a>
+        <% if (m.priority === 'urgent') { %> <span class="pill bad">Urgent</span><% } %><% if (m.room_out_of_order) { %> <span class="pill st-ooo">Room out of order</span><% } %></td>
+      <td class="nowrap"><span class="pill st-<%= m.status %>"><%= statuses[m.status] %></span><% if (m.status === 'cannot_fix') { %><br><span class="muted small"><%= m.gm_decided_at ? 'GM decided' : 'Waiting on GM' %></span><% } %></td>
+      <td class="muted nowrap"><%= util.shortDateTime(m.created_at, property.timezone) %></td>
+      <td class="muted"><%= m.reporter || '' %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+<%- include('partials/bottom') %>

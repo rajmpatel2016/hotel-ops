@@ -1,0 +1,104 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; const today = util.todayIn(property.timezone); %>
+<div class="head">
+  <h1>Housekeeping board</h1>
+  <form method="get" action="<%= base %>/board" class="row tight daynav">
+    <a class="btn small" href="<%= base %>/board?day=<%= util.addDays(day, -1) %>" aria-label="Previous day">‹</a>
+    <input type="date" name="day" value="<%= day %>" data-autosubmit aria-label="Board date">
+    <a class="btn small" href="<%= base %>/board?day=<%= util.addDays(day, 1) %>" aria-label="Next day">›</a>
+    <% if (day !== today) { %><a class="btn small" href="<%= base %>/board">Today</a><% } %>
+  </form>
+  <span class="spacer"></span>
+  <a class="btn primary" href="<%= base %>/sheets?day=<%= day %>">Print room sheets</a>
+</div>
+<p class="muted datehead"><%= util.longDate(day) %></p>
+
+<% if (!rooms.length) { %>
+<section class="card"><p><strong>No rooms yet.</strong> <% if (can('rooms')) { %><a href="<%= base %>/rooms">Add the room list</a> first.<% } else { %>Ask your GM to add the room list.<% } %></p></section>
+<% } else { %>
+
+<div class="boardlayout" id="board" data-day="<%= day %>" data-url="<%= base %>/board/room"
+     data-credit-checkout="<%= credits.checkout %>" data-credit-stayover="<%= credits.stayover %>">
+  <aside class="side">
+    <section class="card">
+      <h2>Loads</h2>
+      <div id="totals" class="totals"></div>
+      <table class="grid compact" id="tally">
+        <thead><tr><th>Housekeeper</th><th class="n" title="Checkouts">C/O</th><th class="n" title="Stayovers">Stay</th><th class="n" title="Checkout = 1, stayover = 0.5">Load</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <% if (!housekeepers.length) { %><p class="muted">No housekeepers on the staff list yet. <% if (can('staff')) { %><a href="<%= base %>/staff">Add staff</a>.<% } %></p><% } %>
+    </section>
+
+    <details class="card" <%= rooms.some(r => r.status === 'checkout' || r.status === 'stayover') ? '' : 'open' %>>
+      <summary>1. Paste rooms from the PMS</summary>
+      <form method="post" action="<%= base %>/board/paste" class="stack">
+        <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="day" value="<%= day %>">
+        <label>Checkout rooms<textarea name="checkouts" rows="3" placeholder="101 104 212 305"></textarea></label>
+        <label>Stayover rooms<textarea name="stayovers" rows="3" placeholder="102 103 201"></textarea></label>
+        <label class="check"><input type="checkbox" name="reset" checked> Set every other room to vacant</label>
+        <button class="btn" type="submit">Set room statuses</button>
+      </form>
+    </details>
+
+    <details class="card">
+      <summary>2. Split rooms between housekeepers</summary>
+      <form method="post" action="<%= base %>/board/auto" class="stack">
+        <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="day" value="<%= day %>">
+        <fieldset><legend>Who is working?</legend>
+          <% housekeepers.filter(h => h.current && !h.removed).forEach(h => { %>
+            <label class="check"><input type="checkbox" name="employee_ids" value="<%= h.id %>"> <%= h.name %></label>
+          <% }) %>
+        </fieldset>
+        <label class="check"><input type="radio" name="scope" value="unassigned" checked> Only rooms without a housekeeper</label>
+        <label class="check"><input type="radio" name="scope" value="all"> Redo every room</label>
+        <button class="btn" type="submit">Split evenly</button>
+        <p class="muted small">Rooms are split in room-number order so each person gets a section. A checkout counts as 1, a stayover as 0.5.</p>
+      </form>
+      <form method="post" action="<%= base %>/board/clear" class="stack" data-confirm="Clear every housekeeper assignment for this day?">
+        <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="day" value="<%= day %>">
+        <button class="btn small danger" type="submit">Clear all assignments</button>
+      </form>
+    </details>
+  </aside>
+
+  <section class="main">
+    <div class="row tight filters no-print">
+      <label class="check"><input type="checkbox" id="onlyService"> Show only checkouts and stayovers</label>
+      <span class="spacer"></span>
+      <span id="saveState" class="muted small" aria-live="polite"></span>
+    </div>
+    <div class="tablewrap card flush">
+    <table class="grid board">
+      <thead><tr><th>Room</th><th>Type</th><th>Status</th><th>Housekeeper</th><th>Note for the sheet</th><th></th></tr></thead>
+      <tbody>
+      <% let floor = null; rooms.forEach(r => { if (r.floor !== floor) { floor = r.floor; %>
+        <tr class="floor"><th colspan="6"><%= floor ? 'Floor ' + floor : 'Rooms' %></th></tr>
+      <% } %>
+        <tr data-room="<%= r.id %>" data-status="<%= r.status %>">
+          <td class="num"><%= r.number %></td>
+          <td class="muted"><%= r.room_type %></td>
+          <td>
+            <div class="seg" role="group" aria-label="Status for room <%= r.number %>">
+              <% statuses.forEach(s => { %><button type="button" data-status="<%= s.key %>" class="s-<%= s.key %>" aria-pressed="<%= r.status === s.key %>" title="<%= s.label %>"><%= s.short %></button><% }) %>
+            </div>
+          </td>
+          <td>
+            <select class="hk" aria-label="Housekeeper for room <%= r.number %>" <%= (r.status === 'checkout' || r.status === 'stayover') ? '' : 'disabled' %>>
+              <option value="">Unassigned</option>
+              <% housekeepers.forEach(h => { %><option value="<%= h.id %>" <%= r.employee_id === h.id ? 'selected' : '' %>><%= h.name %><%= (h.removed || !h.current) ? ' (no longer on staff list)' : '' %></option><% }) %>
+            </select>
+          </td>
+          <td><input class="note" value="<%= r.note %>" maxlength="300" aria-label="Note for room <%= r.number %>" placeholder="Late checkout, crib, VIP…"></td>
+          <td class="r"><a class="small" href="<%= base %>/maintenance/new?room=<%= r.id %>">Report issue</a></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+    </div>
+  </section>
+</div>
+<script id="hkdata" type="application/json"><%- JSON.stringify(housekeepers.map(h => ({ id: h.id, name: h.name }))).replace(/</g, '\\u003c') %></script>
+<script src="/board.js" defer></script>
+<% } %>
+<%- include('partials/bottom') %>

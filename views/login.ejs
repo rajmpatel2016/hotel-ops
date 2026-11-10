@@ -1,0 +1,13 @@
+<%- include('partials/top') %>
+<section class="card narrow">
+  <h1>Hotel Ops</h1>
+  <p class="muted">Sign in with the email and password your manager gave you.</p>
+  <% if (error) { %><div class="flash error" role="alert"><%= error %></div><% } %>
+  <form method="post" action="/login" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Email<input type="email" name="email" value="<%= email %>" autocomplete="username" required autofocus></label>
+    <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary" type="submit">Sign in</button>
+  </form>
+</section>
+<%- include('partials/bottom') %>

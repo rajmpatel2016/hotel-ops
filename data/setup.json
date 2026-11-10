@@ -1,0 +1,5 @@
+{
+  "hotels": [
+    { "name": "EVEN Hotel Norwalk", "code": "EVEN", "timezone": "America/New_York", "rooms": [] }
+  ]
+}

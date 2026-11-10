@@ -1,0 +1,50 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; const active = rooms.filter(r => r.active); %>
+<div class="head"><h1>Rooms</h1><span class="muted"><%= active.length %> active<% if (rooms.length !== active.length) { %>, <%= rooms.length - active.length %> off<% } %></span></div>
+<div class="cols">
+  <form method="post" action="<%= base %>/rooms/range" class="card stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <h2>Add a run of rooms</h2>
+    <div class="row tight">
+      <label>First<input name="from" inputmode="numeric" size="6" placeholder="101" required></label>
+      <label>Last<input name="to" inputmode="numeric" size="6" placeholder="124" required></label>
+      <label>Type (optional)<input name="type" size="12" placeholder="King"></label>
+    </div>
+    <button class="btn" type="submit">Add rooms</button>
+  </form>
+  <form method="post" action="<%= base %>/rooms/paste" class="card stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <h2>Paste a room list</h2>
+    <label>One room per line, with the type after it if you have it<textarea name="text" rows="4" placeholder="101, King&#10;102, Two Queens&#10;103, King Suite"></textarea></label>
+    <button class="btn" type="submit">Add rooms</button>
+  </form>
+</div>
+<% if (rooms.length) { %>
+<div class="tablewrap card flush">
+<table class="grid compact">
+  <thead><tr><th>Room</th><th>Floor</th><th>Type</th><th></th></tr></thead>
+  <tbody>
+  <% rooms.forEach(r => { %>
+    <tr class="<%= r.active ? '' : 'off' %>">
+      <td class="num"><%= r.number %><% if (!r.active) { %> <span class="pill">off</span><% } %></td>
+      <td class="muted"><%= r.floor %></td>
+      <td>
+        <form method="post" action="<%= base %>/rooms/<%= r.id %>" class="inline row tight">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input name="room_type" value="<%= r.room_type %>" size="16" aria-label="Type for room <%= r.number %>">
+          <button class="btn small" type="submit">Save</button>
+        </form>
+      </td>
+      <td class="r">
+        <form method="post" action="<%= base %>/rooms/<%= r.id %>" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="toggle">
+          <button class="btn small" type="submit"><%= r.active ? 'Take off the board' : 'Put back' %></button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+<%- include('partials/bottom') %>

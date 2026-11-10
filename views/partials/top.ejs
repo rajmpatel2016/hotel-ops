@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="<%= csrf %>">
+<title><%= title %> · Hotel Ops</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<% if (user) { %>
+<header class="topbar no-print">
+  <div class="wrap bar">
+    <a class="brand" href="/">Hotel Ops</a>
+    <% if (property) { %><span class="hotel"><%= property.name %></span><% } %>
+    <span class="spacer"></span>
+    <% if (user.role === 'admin') { %><a class="toplink" href="/">All hotels</a><a class="toplink" href="/admin">Admin</a><% } %>
+    <a class="toplink" href="/account"><%= user.name %></a>
+    <form method="post" action="/logout" class="inline"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="linkbtn" type="submit">Sign out</button></form>
+  </div>
+  <% if (property) { const base = '/p/' + property.id; const on = (p) => (path === p || (p !== base && path.startsWith(p))) ? 'on' : ''; %>
+  <nav class="wrap tabs">
+    <a class="<%= path === base ? 'on' : '' %>" href="<%= base %>">Today</a>
+    <% if (can('board')) { %><a class="<%= on(base + '/board') %>" href="<%= base %>/board">Housekeeping board</a><a class="<%= on(base + '/sheets') %>" href="<%= base %>/sheets">Room sheets</a><% } %>
+    <a class="<%= on(base + '/maintenance') %>" href="<%= base %>/maintenance">Maintenance</a>
+    <% if (can('gmQueue')) { %><a class="<%= on(base + '/gm') %>" href="<%= base %>/gm">Needs GM<% if (flagCount) { %> <span class="badge"><%= flagCount %></span><% } %></a><% } %>
+    <% if (can('staff')) { %><a class="<%= on(base + '/staff') %>" href="<%= base %>/staff">Staff</a><% } %>
+    <% if (can('rooms')) { %><a class="<%= on(base + '/rooms') %>" href="<%= base %>/rooms">Rooms</a><% } %>
+  </nav>
+  <% } %>
+</header>
+<% } %>
+<main class="wrap">
+<% if (flash) { %><div class="flash <%= flash.type %> no-print" role="status"><%= flash.text %></div><% } %>

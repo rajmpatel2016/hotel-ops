@@ -1,0 +1,19 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; %>
+<div class="head"><h1>Log a maintenance request</h1></div>
+<form method="post" action="<%= base %>/maintenance" class="card stack narrow left">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <div class="row tight">
+    <label>Room<select name="room_id"><option value="">Not a guest room</option><% rooms.forEach(r => { %><option value="<%= r.id %>" <%= roomId === r.id ? 'selected' : '' %>><%= r.number %></option><% }) %></select></label>
+    <label class="grow">Or where is it?<input name="location" maxlength="120" placeholder="Lobby, pool, laundry, 2nd floor ice machine"></label>
+  </div>
+  <label>What is wrong?<textarea name="description" rows="4" maxlength="2000" required placeholder="AC blowing warm air. Guest reported it at check-in."></textarea></label>
+  <fieldset class="row tight"><legend>How urgent?</legend>
+    <label class="check"><input type="radio" name="priority" value="low"> Low</label>
+    <label class="check"><input type="radio" name="priority" value="normal" checked> Normal</label>
+    <label class="check"><input type="radio" name="priority" value="urgent"> Urgent</label>
+  </fieldset>
+  <label class="check"><input type="checkbox" name="room_out_of_order"> The room cannot be sold. Mark it out of order on today's board.</label>
+  <div class="row tight"><button class="btn primary" type="submit">Log request</button><a class="btn" href="<%= base %>/maintenance">Cancel</a></div>
+</form>
+<%- include('partials/bottom') %>

@@ -1,0 +1,39 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; %>
+<div class="head"><h1>Today</h1><span class="muted"><%= util.longDate(day) %></span></div>
+<% if (!s.rooms) { %>
+<section class="card"><p><strong>This hotel has no rooms yet.</strong> <% if (can('rooms')) { %><a href="<%= base %>/rooms">Add the room list</a> to start using the housekeeping board.<% } else { %>Ask your GM to add the room list.<% } %></p></section>
+<% } %>
+<div class="stats">
+  <a class="stat" href="<%= base %>/board"><span class="k">Checkouts</span><span class="v"><%= s.checkouts %></span></a>
+  <a class="stat" href="<%= base %>/board"><span class="k">Stayovers</span><span class="v"><%= s.stayovers %></span></a>
+  <a class="stat <%= s.unassigned ? 'warn' : '' %>" href="<%= base %>/board"><span class="k">Rooms without a housekeeper</span><span class="v"><%= s.unassigned %></span></a>
+  <a class="stat" href="<%= base %>/board"><span class="k">Out of order</span><span class="v"><%= s.ooo %></span></a>
+  <a class="stat <%= s.urgent ? 'bad' : '' %>" href="<%= base %>/maintenance"><span class="k">Open maintenance</span><span class="v"><%= s.open_maint %></span><% if (s.urgent) { %><span class="sub"><%= s.urgent %> urgent</span><% } %></a>
+  <% if (can('gmQueue')) { %><a class="stat <%= flagCount ? 'bad' : '' %>" href="<%= base %>/gm"><span class="k">Needs GM</span><span class="v"><%= flagCount %></span></a><% } %>
+</div>
+<% if (!s.checkouts && !s.stayovers && s.rooms && can('board')) { %>
+<section class="card"><p>Today's board is empty. <a href="<%= base %>/board">Open the housekeeping board</a> and paste the checkout and stayover room numbers from the PMS.</p></section>
+<% } %>
+<div class="head"><h2>Maintenance needing attention</h2><a class="btn small" href="<%= base %>/maintenance/new">Log a request</a></div>
+<% if (!recent.length) { %>
+<section class="card"><p class="muted">Nothing open.</p></section>
+<% } else { %>
+<div class="tablewrap card flush">
+<table class="grid">
+  <thead><tr><th>#</th><th>Where</th><th>Problem</th><th>Status</th><th>Logged</th></tr></thead>
+  <tbody>
+  <% recent.forEach(m => { %>
+    <tr>
+      <td><a href="<%= base %>/maintenance/<%= m.id %>">#<%= m.id %></a></td>
+      <td><%= m.room ? 'Room ' + m.room : m.location %></td>
+      <td><%= m.description.length > 90 ? m.description.slice(0, 90) + '…' : m.description %><% if (m.priority === 'urgent') { %> <span class="pill bad">Urgent</span><% } %></td>
+      <td><span class="pill st-<%= m.status %>"><%= util.MAINT_STATUSES[m.status] %></span></td>
+      <td class="muted"><%= util.shortDateTime(m.created_at, property.timezone) %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+<%- include('partials/bottom') %>

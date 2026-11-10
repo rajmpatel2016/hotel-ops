@@ -1,0 +1,65 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; const r = request; const work = can('maintWork'); %>
+<p class="crumb"><a href="<%= base %>/maintenance">‹ Maintenance</a></p>
+<div class="head">
+  <h1>#<%= r.id %> · <%= r.room ? 'Room ' + r.room : r.location %></h1>
+  <span class="pill st-<%= r.status %>"><%= statuses[r.status] %></span>
+  <% if (r.priority === 'urgent') { %><span class="pill bad">Urgent</span><% } %>
+  <% if (r.room_out_of_order) { %><span class="pill st-ooo">Room out of order</span><% } %>
+</div>
+<div class="cols wide-left">
+  <div>
+    <section class="card">
+      <p class="lead"><%= r.description %></p>
+      <p class="muted small">Logged <%= util.shortDateTime(r.created_at, property.timezone) %><% if (r.reporter) { %> by <%= r.reporter %><% } %><% if (r.room && r.location) { %> · <%= r.location %><% } %></p>
+      <% if (r.status === 'cannot_fix') { %>
+        <div class="flash <%= r.gm_decided_at ? 'warn' : 'error' %>">
+          <strong>Maintenance could not fix this.</strong> <%= r.flag_reason %>
+          <br><% if (r.gm_decided_at) { %><strong>GM:</strong> <%= r.gm_decision %><% } else { %>Waiting on the GM since <%= util.shortDateTime(r.flagged_at, property.timezone) %>.<% if (can('gmQueue')) { %> <a href="<%= base %>/gm">Decide now</a><% } %><% } %>
+        </div>
+      <% } %>
+    </section>
+    <section class="card">
+      <h2>History</h2>
+      <% if (!notes.length) { %><p class="muted">No updates yet.</p><% } %>
+      <ul class="timeline">
+        <% notes.forEach(n => { %><li><span class="when"><%= util.shortDateTime(n.created_at, property.timezone) %><% if (n.name) { %> · <%= n.name %><% } %></span><span><%= n.body %></span></li><% }) %>
+      </ul>
+      <form method="post" action="<%= base %>/maintenance/<%= r.id %>/note" class="stack">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label>Add an update<textarea name="body" rows="2" maxlength="2000" required></textarea></label>
+        <button class="btn" type="submit">Add update</button>
+      </form>
+    </section>
+  </div>
+  <% if (work) { %>
+  <aside>
+    <section class="card stack">
+      <h2>Move it along</h2>
+      <% if (r.status === 'open') { %>
+        <form method="post" action="<%= base %>/maintenance/<%= r.id %>/status"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="start"><button class="btn wide" type="submit">Start work</button></form>
+      <% } %>
+      <% if (r.status === 'open' || r.status === 'in_progress') { %>
+        <form method="post" action="<%= base %>/maintenance/<%= r.id %>/status" class="stack">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="fixed">
+          <label>What was done (optional)<input name="reason" maxlength="500"></label>
+          <button class="btn primary wide" type="submit">Mark fixed</button>
+        </form>
+        <hr>
+        <form method="post" action="<%= base %>/maintenance/<%= r.id %>/status" class="stack">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="cannot_fix">
+          <label>Why can't it be fixed in house?<textarea name="reason" rows="3" maxlength="2000" required placeholder="Compressor is dead. Needs an HVAC contractor or a new unit."></textarea></label>
+          <button class="btn danger wide" type="submit">Cannot fix. Send to GM</button>
+        </form>
+      <% } else { %>
+        <form method="post" action="<%= base %>/maintenance/<%= r.id %>/status" class="stack">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="reopen">
+          <label>Why reopen? (optional)<input name="reason" maxlength="500"></label>
+          <button class="btn wide" type="submit">Reopen</button>
+        </form>
+      <% } %>
+    </section>
+  </aside>
+  <% } %>
+</div>
+<%- include('partials/bottom') %>
