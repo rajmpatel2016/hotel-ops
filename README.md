@@ -6,6 +6,7 @@ Daily operations for select-service hotels. This first version covers:
 - **Room sheets**: one printable page per housekeeper, for checkouts, stayovers, or both.
 - **Maintenance log**: anyone can log a request. Maintenance starts it, marks it fixed, or marks it "cannot fix" with a reason.
 - **Needs GM**: every "cannot fix" request waits here until the GM decides: outside vendor, send back, or close.
+- **Schedule**: a weekly grid by department. Click a day to set a shift, apply it to several days at once, copy last week, print. Paid hours total per person, per department and per day; anyone over 40 hours is marked overtime. Housekeepers scheduled for a day are pre-ticked on that day's board.
 - **Staff**: load the ADP roster report (CSV), add or remove people by hand, move people between categories.
 - **Admin**: hotels and sign-ins. Each sign-in belongs to one hotel, except corporate admins, who see all of them.
 
@@ -15,7 +16,7 @@ Daily operations for select-service hotels. This first version covers:
 |---|---|
 | Corporate admin | Everything, at every hotel |
 | General manager | Everything at their hotel |
-| Housekeeping manager | Board, room sheets, staff list, log maintenance requests |
+| Housekeeping manager | Board, room sheets, housekeeping schedule, staff list, log maintenance requests |
 | Maintenance | Maintenance log |
 
 A person tied to one hotel cannot open or change another hotel's data.
@@ -38,7 +39,7 @@ A person tied to one hotel cannot open or change another hotel's data.
 
 Every push to the main branch redeploys automatically.
 
-`data/setup.json` lists the hotels created on the very first start. More hotels are added under Admin.
+`data/setup.json` lists the hotels created on the very first start, and their rooms. Rooms listed there are added on any start if they are missing; rooms already in the app are never changed. More hotels are added under Admin, where each hotel's time zone and work-week start day are also set.
 
 ## Running locally
 
@@ -66,4 +67,4 @@ Then open http://localhost:3000. `npm test` runs the automated checks.
 
 ## Not built yet
 
-Weekly schedules and timesheets, PMS report import, the repair and vendor approval workflow, the obligations and capital registers, and portfolio analytics.
+Timesheets (actual hours against the schedule), PMS report import, the repair and vendor approval workflow, the obligations and capital registers, and portfolio analytics.

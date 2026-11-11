@@ -45,9 +45,9 @@
       <summary>2. Split rooms between housekeepers</summary>
       <form method="post" action="<%= base %>/board/auto" class="stack">
         <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="day" value="<%= day %>">
-        <fieldset><legend>Who is working?</legend>
+        <fieldset><legend>Who is working?<% if (housekeepers.some(h => scheduled.has(h.id))) { %> Ticked from the schedule.<% } %></legend>
           <% housekeepers.filter(h => h.current && !h.removed).forEach(h => { %>
-            <label class="check"><input type="checkbox" name="employee_ids" value="<%= h.id %>"> <%= h.name %></label>
+            <% const sh = scheduled.get(h.id); %><label class="check"><input type="checkbox" name="employee_ids" value="<%= h.id %>" <%= sh ? 'checked' : '' %>> <%= h.name %><% if (sh) { %> <span class="muted small"><%= util.fmtTime(sh.start_time) %>–<%= util.fmtTime(sh.end_time) %></span><% } %></label>
           <% }) %>
         </fieldset>
         <label class="check"><input type="radio" name="scope" value="unassigned" checked> Only rooms without a housekeeper</label>

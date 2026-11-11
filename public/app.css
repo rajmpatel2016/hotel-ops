@@ -203,3 +203,33 @@ table.grid { width: 100%; border-collapse: collapse; font-variant-numeric: tabul
   .sheettable tr { break-inside: avoid; }
   .sheettable th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Weekly schedule */
+.otnote { color: var(--ooo); font-weight: 600; }
+.grid.sched th, .grid.sched td { border-right: 1px solid var(--line-soft); }
+.grid.sched th:last-child, .grid.sched td:last-child { border-right: 0; }
+.grid.sched thead th.today { color: var(--brand-dark); box-shadow: inset 0 -3px 0 var(--brand); }
+.grid.sched tr.floor th { background: var(--brand-tint); color: var(--brand-dark); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 4px 10px; }
+.grid.sched td.who { min-width: 150px; }
+.grid.sched td.slot { padding: 3px; min-width: 92px; }
+.grid.sched td.tot { font-weight: 700; }
+.grid.sched td.tot.ot { color: var(--ooo); background: var(--ooo-bg); }
+.grid.sched tr.sub td { background: #f8f9fb; color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.grid.sched tr.sub.all td { color: var(--ink); border-top: 2px solid var(--line); }
+.cell { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; width: 100%; min-height: 40px; padding: 4px 7px; border: 1px solid transparent; border-radius: 4px; background: none; font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
+.cell.has { background: var(--stay-bg); border-color: #c3d4f5; }
+.cell.empty { align-items: center; color: #9aa6b2; }
+.cell:hover { border-color: var(--brand); }
+.cell .t { font-weight: 600; white-space: nowrap; }
+.cell .h { font-size: 12px; color: var(--muted); }
+.cell .plus { font-size: 16px; }
+.dialog { border: 1px solid var(--line); border-radius: 8px; padding: 18px; width: min(560px, calc(100vw - 32px)); color: var(--ink); background: var(--panel); }
+.dialog::backdrop { background: rgba(15, 25, 35, .45); }
+
+@media print {
+  .grid.sched { font-size: 11px; }
+  .cell { border: 0 !important; background: none !important; padding: 0; min-height: 0; }
+  .card.flush { border: 0; }
+  .grid.sched th, .grid.sched td { border: 1px solid #777 !important; }
+  .dialog { display: none; }
+}

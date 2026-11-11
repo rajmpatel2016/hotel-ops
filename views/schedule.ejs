@@ -1,0 +1,84 @@
+<%- include('partials/top') %>
+<% const base = '/p/' + property.id; %>
+<div class="head">
+  <h1>Schedule</h1>
+  <div class="row tight no-print">
+    <a class="btn small" href="<%= base %>/schedule?week=<%= util.addDays(week, -7) %>" aria-label="Previous week">‹</a>
+    <form method="get" action="<%= base %>/schedule" class="inline"><input type="date" name="week" value="<%= week %>" data-autosubmit aria-label="Any day in the week to show"></form>
+    <a class="btn small" href="<%= base %>/schedule?week=<%= util.addDays(week, 7) %>" aria-label="Next week">›</a>
+    <% if (week !== thisWeek) { %><a class="btn small" href="<%= base %>/schedule">This week</a><% } %>
+  </div>
+  <span class="spacer"></span>
+  <form method="post" action="<%= base %>/schedule/copy" class="inline no-print">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="week" value="<%= week %>">
+    <button class="btn" type="submit">Copy last week</button>
+  </form>
+  <button class="btn primary no-print" type="button" data-print>Print</button>
+</div>
+<p class="datehead"><strong>Week of <%= util.longDate(week) %></strong> <span class="muted">· <%= property.name %> · <%= util.fmtHours(weekTotal) %> scheduled hours<% if (overtimeCount) { %> · <span class="otnote"><%= overtimeCount %> over 40 hours</span><% } %></span></p>
+
+<% if (!groups.length) { %>
+<section class="card"><p class="muted">No staff to schedule yet. <a href="<%= base %>/staff">Load the ADP roster report or add people by hand</a> first.</p></section>
+<% } else { %>
+<div class="tablewrap card flush">
+<table class="grid sched">
+  <thead><tr><th>Name</th><% days.forEach(d => { %><th class="<%= d === today ? 'today' : '' %>"><%= util.shortDay(d) %></th><% }) %><th class="n">Hours</th></tr></thead>
+  <% groups.forEach(g => { %>
+  <tbody>
+    <tr class="floor"><th colspan="9"><%= g.category %></th></tr>
+    <% g.rows.forEach(p => { %>
+    <tr>
+      <td class="who"><strong><%= p.name %></strong><% if (p.removed || !p.current) { %> <span class="pill">off staff list</span><% } %><% if (p.job_title) { %><br><span class="muted small"><%= p.job_title %></span><% } %></td>
+      <% p.cells.forEach((s, i) => { %>
+      <td class="slot">
+        <button type="button" class="cell <%= s ? 'has' : 'empty' %>" data-emp="<%= p.id %>" data-name="<%= p.name %>" data-day="<%= days[i] %>"
+          data-start="<%= s ? s.start_time : '' %>" data-end="<%= s ? s.end_time : '' %>" data-break="<%= s ? s.break_minutes : '' %>" data-note="<%= s ? s.note : '' %>"
+          aria-label="<%= p.name %>, <%= util.shortDay(days[i]) %>: <%= s ? util.fmtTime(s.start_time) + ' to ' + util.fmtTime(s.end_time) : 'off' %>">
+          <% if (s) { %><span class="t"><%= util.fmtTime(s.start_time) %>–<%= util.fmtTime(s.end_time) %></span><span class="h"><%= util.fmtHours(s.minutes) %> h<% if (s.note) { %> · <%= s.note %><% } %></span><% } else { %><span class="plus no-print">+</span><% } %>
+        </button>
+      </td>
+      <% }) %>
+      <td class="n tot <%= p.overtime ? 'ot' : '' %>"><%= util.fmtHours(p.minutes) %><% if (p.overtime) { %><br><span class="small">overtime</span><% } %></td>
+    </tr>
+    <% }) %>
+    <tr class="sub"><td><%= g.category %> hours</td><% g.totals.forEach(t => { %><td><%= t ? util.fmtHours(t) : '' %></td><% }) %><td class="n"><%= util.fmtHours(g.minutes) %></td></tr>
+  </tbody>
+  <% }) %>
+  <% if (groups.length > 1) { %>
+  <tfoot><tr class="sub all"><td>All scheduled hours</td><% dayTotals.forEach(t => { %><td><%= t ? util.fmtHours(t) : '' %></td><% }) %><td class="n"><%= util.fmtHours(weekTotal) %></td></tr></tfoot>
+  <% } %>
+</table>
+</div>
+<p class="muted small no-print">Click a day to add or change a shift. Hours are paid hours, after the unpaid break. Anyone over 40 hours in the week is marked overtime.</p>
+
+<dialog id="shiftDialog" class="dialog">
+  <form method="post" action="<%= base %>/schedule/shift" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="week" value="<%= week %>"><input type="hidden" name="employee_id" id="sd_emp">
+    <h2 id="sd_name">Shift</h2>
+    <fieldset class="row tight"><legend>Days</legend>
+      <% days.forEach(d => { %><label class="check"><input type="checkbox" name="days" value="<%= d %>"> <%= util.shortDay(d) %></label><% }) %>
+    </fieldset>
+    <div class="row tight">
+      <label>Start<input type="time" name="start_time" id="sd_start" step="900" required></label>
+      <label>End<input type="time" name="end_time" id="sd_end" step="900" required></label>
+      <label>Unpaid break<select name="break_minutes" id="sd_break"><option value="0">None</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">60 min</option></select></label>
+    </div>
+    <div class="row tight" aria-label="Common shifts">
+      <button type="button" class="btn small" data-preset="07:00,15:30">7a–3:30p</button>
+      <button type="button" class="btn small" data-preset="08:00,16:30">8a–4:30p</button>
+      <button type="button" class="btn small" data-preset="09:00,17:30">9a–5:30p</button>
+      <button type="button" class="btn small" data-preset="15:00,23:30">3p–11:30p</button>
+      <button type="button" class="btn small" data-preset="23:00,07:30">11p–7:30a</button>
+    </div>
+    <label>Note (optional)<input name="note" id="sd_note" maxlength="120" placeholder="Training, laundry, covering front desk"></label>
+    <div class="row tight">
+      <button class="btn primary" type="submit" name="action" value="save">Save shift</button>
+      <button class="btn danger" type="submit" name="action" value="clear" formnovalidate>Clear ticked days</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" data-close>Cancel</button>
+    </div>
+  </form>
+</dialog>
+<script src="/schedule.js" defer></script>
+<% } %>
+<%- include('partials/bottom') %>

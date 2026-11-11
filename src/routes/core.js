@@ -119,7 +119,9 @@ router.post('/admin/properties/:id', auth.requireAdmin, async (req, res) => {
     req.flash('error', 'Hotel name cannot be blank.');
     return res.redirect('/admin');
   }
-  await db.query('UPDATE properties SET name=$2, code=$3, timezone=$4 WHERE id=$1', [Number(req.params.id), name, code, tz]);
+  const ws = Number(req.body.week_start);
+  const weekStart = Number.isInteger(ws) && ws >= 0 && ws <= 6 ? ws : 0;
+  await db.query('UPDATE properties SET name=$2, code=$3, timezone=$4, week_start=$5 WHERE id=$1', [Number(req.params.id), name, code, tz, weekStart]);
   req.flash('ok', 'Hotel updated.');
   res.redirect('/admin');
 });

@@ -13,6 +13,7 @@ const ROLE_LABELS = {
 const CAN = {
   board: ['admin', 'gm', 'housekeeping'],
   staff: ['admin', 'gm', 'housekeeping'],
+  schedule: ['admin', 'gm', 'housekeeping'],
   staffImport: ['admin', 'gm'],
   rooms: ['admin', 'gm'],
   maintView: ['admin', 'gm', 'housekeeping', 'maintenance'],

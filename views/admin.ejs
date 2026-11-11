@@ -3,13 +3,14 @@
 <h2>Hotels</h2>
 <div class="tablewrap card flush">
 <table class="grid">
-  <thead><tr><th>Name</th><th>Code</th><th>Time zone</th><th class="n">Rooms</th><th class="n">Staff</th><th></th></tr></thead>
+  <thead><tr><th>Name</th><th>Code</th><th>Time zone</th><th>Work week starts</th><th class="n">Rooms</th><th class="n">Staff</th><th></th></tr></thead>
   <tbody>
   <% properties.forEach(p => { %>
     <tr>
       <td><input form="pf<%= p.id %>" name="name" value="<%= p.name %>" aria-label="Hotel name" required></td>
       <td><input form="pf<%= p.id %>" name="code" value="<%= p.code || '' %>" aria-label="Code" size="8"></td>
       <td><select form="pf<%= p.id %>" name="timezone" aria-label="Time zone"><% timezones.forEach(t => { %><option <%= t === p.timezone ? 'selected' : '' %>><%= t %></option><% }) %></select></td>
+      <td><select form="pf<%= p.id %>" name="week_start" aria-label="Work week starts"><% util.DAY_NAMES.forEach((d, i) => { %><option value="<%= i %>" <%= i === p.week_start ? 'selected' : '' %>><%= d %></option><% }) %></select></td>
       <td class="n"><a href="/p/<%= p.id %>/rooms"><%= p.rooms %></a></td>
       <td class="n"><a href="/p/<%= p.id %>/staff"><%= p.staff %></a></td>
       <td class="r">
@@ -18,7 +19,7 @@
       </td>
     </tr>
   <% }) %>
-  <% if (!properties.length) { %><tr><td colspan="6" class="muted">No hotels yet. Add the first one below.</td></tr><% } %>
+  <% if (!properties.length) { %><tr><td colspan="7" class="muted">No hotels yet. Add the first one below.</td></tr><% } %>
   </tbody>
 </table>
 </div>

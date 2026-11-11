@@ -87,7 +87,14 @@ router.get('/p/:pid', hotel, async (req, res) => {
 router.get('/p/:pid/board', hotel, auth.allow('board'), async (req, res) => {
   const day = pickDay(req);
   const { rooms, housekeepers } = await loadBoard(req.property.id, day);
-  res.render('board', { title: 'Housekeeping board', day, rooms, housekeepers, statuses: ROOM_STATUSES, credits: CREDITS });
+  // Who the schedule says is working today, so the split starts with the right people ticked.
+  const shifts = await db.query(
+    `SELECT employee_id, to_char(start_time, 'HH24:MI') AS start_time, to_char(end_time, 'HH24:MI') AS end_time
+       FROM shifts WHERE property_id = $1 AND day = $2`,
+    [req.property.id, day]
+  );
+  const scheduled = new Map(shifts.map((s) => [s.employee_id, s]));
+  res.render('board', { title: 'Housekeeping board', day, rooms, housekeepers, scheduled, statuses: ROOM_STATUSES, credits: CREDITS });
 });
 
 // One room changed (status, housekeeper or note). Called by the board as you click.

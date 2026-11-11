@@ -90,7 +90,39 @@ function displayName(name) {
   return m ? `${m[2]} ${m[1]}` : n;
 }
 
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// First day of the work week that contains `day`, for a week starting on weekday `dow` (0 = Sunday).
+function weekStartOf(day, dow) {
+  const d = new Date(day + 'T00:00:00Z');
+  const back = (d.getUTCDay() - (Number(dow) || 0) + 7) % 7;
+  return addDays(day, -back);
+}
+
+const toMinutes = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+
+// Paid minutes in a shift. A shift ending at or before its start runs past midnight.
+function shiftMinutes(start, end, breakMinutes) {
+  let span = toMinutes(end) - toMinutes(start);
+  if (span <= 0) span += 1440;
+  return Math.max(0, span - (Number(breakMinutes) || 0));
+}
+
+// '07:00:00' -> '7a', '15:30' -> '3:30p'
+function fmtTime(t) {
+  const [h, m] = String(t).split(':').map(Number);
+  const hr = h % 12 === 0 ? 12 : h % 12;
+  return `${hr}${m ? ':' + String(m).padStart(2, '0') : ''}${h < 12 ? 'a' : 'p'}`;
+}
+
+const fmtHours = (minutes) => (Math.round((minutes / 60) * 100) / 100).toString();
+
+function shortDay(day) {
+  return new Date(day + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric', timeZone: 'UTC' });
+}
+
 module.exports = {
+  DAY_NAMES, weekStartOf, shiftMinutes, fmtTime, fmtHours, shortDay,
   CATEGORIES, ROOM_STATUSES, MAINT_STATUSES,
   categorize, todayIn, isDate, addDays, longDate, shortDateTime, daysSince,
   roomSort, parseRoomList, normName, displayName,

@@ -24,6 +24,7 @@
     <% if (can('board')) { %><a class="<%= on(base + '/board') %>" href="<%= base %>/board">Housekeeping board</a><a class="<%= on(base + '/sheets') %>" href="<%= base %>/sheets">Room sheets</a><% } %>
     <a class="<%= on(base + '/maintenance') %>" href="<%= base %>/maintenance">Maintenance</a>
     <% if (can('gmQueue')) { %><a class="<%= on(base + '/gm') %>" href="<%= base %>/gm">Needs GM<% if (flagCount) { %> <span class="badge"><%= flagCount %></span><% } %></a><% } %>
+    <% if (can('schedule')) { %><a class="<%= on(base + '/schedule') %>" href="<%= base %>/schedule">Schedule</a><% } %>
     <% if (can('staff')) { %><a class="<%= on(base + '/staff') %>" href="<%= base %>/staff">Staff</a><% } %>
     <% if (can('rooms')) { %><a class="<%= on(base + '/rooms') %>" href="<%= base %>/rooms">Rooms</a><% } %>
   </nav>

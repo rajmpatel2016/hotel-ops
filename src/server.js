@@ -67,6 +67,7 @@ app.use(require('./routes/core'));
 app.use(require('./routes/board'));
 app.use(require('./routes/maintenance'));
 app.use(require('./routes/staff'));
+app.use(require('./routes/schedule'));
 
 app.use((req, res) => {
   res.status(404).render('error', { title: 'Not found', message: 'That page does not exist.' });

@@ -113,3 +113,23 @@ CREATE TABLE IF NOT EXISTS maintenance_notes (
   body       TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ---- Weekly schedules ----
+
+-- Day the work week starts on: 0 = Sunday ... 6 = Saturday.
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS week_start SMALLINT NOT NULL DEFAULT 0;
+
+-- One shift per person per day. A shift that ends at or before its start runs past midnight.
+CREATE TABLE IF NOT EXISTS shifts (
+  id            SERIAL PRIMARY KEY,
+  property_id   INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  employee_id   INTEGER NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+  day           DATE NOT NULL,
+  start_time    TIME NOT NULL,
+  end_time      TIME NOT NULL,
+  break_minutes INTEGER NOT NULL DEFAULT 30 CHECK (break_minutes BETWEEN 0 AND 240),
+  note          TEXT NOT NULL DEFAULT '',
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (employee_id, day)
+);
+CREATE INDEX IF NOT EXISTS shifts_property_day_idx ON shifts(property_id, day);
